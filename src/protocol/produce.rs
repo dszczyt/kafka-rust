@@ -1,5 +1,7 @@
 use std::io::{Read, Write};
 
+use std::time::Instant;
+
 use crate::codecs::{FromByte, ToByte};
 #[cfg(feature = "gzip")]
 use crate::compression::gzip;
@@ -15,7 +17,7 @@ use super::{API_KEY_PRODUCE, API_VERSION};
 use crate::producer::{ProduceConfirm, ProducePartitionConfirm};
 
 /// The magic byte (a.k.a version) we use for sent messages.
-const MESSAGE_MAGIC_BYTE: i8 = 0;
+const MESSAGE_MAGIC_BYTE: i8 = 1;
 
 #[derive(Debug)]
 pub struct ProduceRequest<'a, 'b> {
@@ -214,6 +216,7 @@ impl<'a> MessageProduceRequest<'a> {
         crc.encode(buffer)?; // reserve space for the crc to be computed later
         magic.encode(buffer)?;
         attributes.encode(buffer)?;
+        (Instant::now().elapsed().as_secs() as i64).encode(buffer)?;
         self.key.encode(buffer)?;
         self.value.encode(buffer)?;
 
